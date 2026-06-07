@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module.js';
+import { WidgetModule } from './widget/widget.module.js';
 
 // Resolve the monorepo-root .env relative to this file (not cwd), so the api
 // finds it regardless of where it was launched from. This module lives at
@@ -18,6 +19,7 @@ const rootEnvPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../.
       envFilePath: rootEnvPath,
     }),
     DatabaseModule,
+    WidgetModule,
   ],
   controllers: [],
   providers: [],

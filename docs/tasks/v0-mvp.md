@@ -43,7 +43,7 @@ Docker Compose (Postgres + Redis).
 - [x] `v0-4.5` — Seed-скрипт: одна организация, один проект (известный `public_key`, `allowed_origins` = origin demo-сайта), один оператор (`role='operator'`).
 
 ### HTTP endpoints
-- [ ] `v0-4.6` — `POST /widget/session` — по `public_key` создать/найти visitor, выдать session token (хеш в `widget_sessions`).
+- [x] `v0-4.6` — `POST /widget/session` — по `public_key` создать/найти visitor, выдать session token (хеш в `widget_sessions`).
 - [ ] `v0-4.7` — Widget conversations: `POST /widget/conversations`, `GET /widget/conversations/:id/messages`, `POST /widget/conversations/:id/messages`.
 - [ ] `v0-4.8` — Operator: `GET /operator/conversations`, `GET /operator/conversations/:id`, `POST /operator/conversations/:id/messages`, `PATCH /operator/conversations/:id` (status/assign).
 - [ ] `v0-4.9` — Dev-guard для operator-роутов (токен из seed; настоящий auth = v1).
