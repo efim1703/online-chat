@@ -36,7 +36,7 @@ Docker Compose (Postgres + Redis).
 ## Шаг 4. `apps/api` — NestJS
 
 ### БД и миграции
-- [ ] `v0-4.1` — Bootstrap NestJS: `package.json`, `tsconfig`, структура, `main.ts`.
+- [x] `v0-4.1` — Bootstrap NestJS: `package.json`, `tsconfig`, структура, `main.ts`.
 - [ ] `v0-4.2` — `DatabaseModule`: провайдер `pg.Pool` (singleton) из `DATABASE_URL`.
 - [ ] `v0-4.3` — Настройка `node-pg-migrate` (конфиг + npm-скрипты миграций).
 - [ ] `v0-4.4` — SQL-миграция: 7 таблиц **точно по DDL** дизайн-документа (`organizations`, `projects`, `users`, `visitors`, `conversations`, `messages`, `widget_sessions`).
