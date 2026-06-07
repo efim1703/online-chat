@@ -6,15 +6,11 @@ import {
 } from '@nestjs/common';
 import type { CreateSessionInput, WidgetSessionDto } from '@support-widget/shared';
 import { DatabaseService } from '../database/database.service.js';
+import { isUuid } from '../common/uuid.js';
 
 // How long a visitor session token stays valid. 7 days is plenty for the local
 // e2e loop; sessions are cheap to re-issue (the widget just calls /session again).
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-// Shape-check a client-supplied visitor id before it touches the uuid column,
-// so a junk value becomes "create a new visitor" instead of a Postgres error.
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Issues anonymous visitor session tokens for the embedded widget.
@@ -86,7 +82,7 @@ export class WidgetSessionService {
     projectId: string,
     requestedId?: string,
   ): Promise<string> {
-    if (requestedId && UUID_RE.test(requestedId)) {
+    if (isUuid(requestedId)) {
       const existing = await this.db.query<{ id: string }>(
         'SELECT id FROM visitors WHERE id = $1 AND project_id = $2',
         [requestedId, projectId],
