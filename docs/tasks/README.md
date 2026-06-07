@@ -14,7 +14,7 @@
 
 | Версия | Описание | Статус |
 |---|---|---|
-| [v0](v0-mvp.md) | Локальный MVP: widget → API → WebSocket → Postgres → dashboard | 🚧 В работе |
+| [v0](v0-mvp.md) ([план](../v0-implementation-plan.md)) | Локальный MVP: widget → API → WebSocket → Postgres → dashboard | 🚧 В работе |
 | v1 | Google Auth + multi-tenant (организации, проекты, роли) | ⬜ Не начато |
 | v2 | Несколько инстансов API + Redis Pub/Sub + Nginx LB | ⬜ Не начато |
 | v3 | Публичное демо (HTTPS, tunnel/free hosting) | ⬜ Не начато |

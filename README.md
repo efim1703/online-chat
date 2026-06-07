@@ -8,7 +8,7 @@
 
 ```
 apps/
-  api/                # Backend HTTP + WebSocket API (Node + TS + Fastify)
+  api/                # Backend HTTP + WebSocket API (Node + TS + NestJS)
   dashboard/          # Operator dashboard (React)
   widget-demo-site/   # Демо-сайт для проверки встраивания widget.js
 packages/

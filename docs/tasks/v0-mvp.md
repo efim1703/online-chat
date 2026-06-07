@@ -1,7 +1,8 @@
 # v0 — Локальный MVP
 
 > Цель: полный рабочий цикл локально, без облака и без авторизации (auth = v1).
-> Источник: [план реализации](../../support_widget_system_design_plan.md), раздел «v0».
+> Подробный план «почему и как» (контекст, обоснования, пути файлов, verification): [v0-implementation-plan.md](../v0-implementation-plan.md).
+> Общий план v0→v7: [support_widget_system_design_plan.md](../../support_widget_system_design_plan.md).
 
 **Definition of Done:** цикл «visitor пишет → operator видит → operator отвечает → visitor видит»
 работает локально; сообщения персистятся в PostgreSQL; realtime идёт через нативный WebSocket.
@@ -14,15 +15,15 @@ Docker Compose (Postgres + Redis).
 
 ## Шаг 1. Привести каркас в порядок
 
-- [ ] `v0-1.1` — Поправить `README.md` и `CLAUDE.md`: бэкенд Fastify → **NestJS**.
-- [ ] `v0-1.2` — Корневой `package.json`: скрипты-агрегаторы `dev` / `build` / `migrate` / `seed` через `pnpm -r` / фильтры.
-- [ ] `v0-1.3` — `git init` (сейчас каталог не git-репозиторий).
+- [x] `v0-1.1` — Поправить `README.md` и `CLAUDE.md`: бэкенд Fastify → **NestJS**.
+- [x] `v0-1.2` — Корневой `package.json`: скрипты-агрегаторы `dev` / `build` / `migrate` / `seed` через `pnpm -r` / фильтры.
+- [x] `v0-1.3` — `git init` (репозиторий уже инициализирован).
 
 ## Шаг 2. Инфраструктура — `infra/docker-compose.yml`
 
-- [ ] `v0-2.1` — Сервис `postgres` (postgres:16): env (user/pass/db), том `pgdata`, проброс `5432`, healthcheck.
-- [ ] `v0-2.2` — Сервис `redis` (redis:7): проброс `6379`, healthcheck. (в v0 не подключаем в коде — задел на v2).
-- [ ] `v0-2.3` — `.env.example` в корне: `DATABASE_URL`, `REDIS_URL`, порты.
+- [x] `v0-2.1` — Сервис `postgres` (postgres:16): env (user/pass/db), том `pgdata`, проброс `5432`, healthcheck.
+- [x] `v0-2.2` — Сервис `redis` (redis:7): проброс `6379`, healthcheck. (в v0 не подключаем в коде — задел на v2).
+- [x] `v0-2.3` — `.env.example` в корне: `DATABASE_URL`, `REDIS_URL`, порты.
 
 ## Шаг 3. `packages/shared` — общие типы
 

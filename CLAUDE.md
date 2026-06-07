@@ -58,7 +58,7 @@ docs: describe v0 task breakdown
 - **Пакетный менеджер:** pnpm (workspace monorepo)
 - **Язык:** TypeScript везде
 - **Node:** 22.x
-- **Backend:** Fastify (решение зафиксируем при старте api)
+- **Backend:** NestJS (нативный `ws` через `WsAdapter` из `@nestjs/platform-ws`)
 - **Комментарии в коде:** на английском (общается агент по-русски)
 - **Стиль:** ESM-модули, strict TypeScript
 
