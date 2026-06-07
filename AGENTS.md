@@ -1,0 +1,68 @@
+# SupportWidget — учебный system design проект
+
+См. [support_widget_system_design_plan.md](support_widget_system_design_plan.md) — полный план эволюции v0→v7.
+
+## Режим работы: парное программирование (ВАЖНО)
+
+Это **учебный проект**. Цель — прокачать system design навыки за пределами фронтенда,
+а НЕ быстро получить готовый чат. Скорость не приоритет, понимание — приоритет.
+
+Правила для агента:
+
+1. **Архитектурные решения — всегда через обсуждение.** Схема БД, контракты API,
+   выбор технологий, структура WebSocket-событий, стратегия масштабирования —
+   сначала показать 2-3 варианта с trade-offs в plan mode, дать пользователю выбрать.
+   Не принимать архитектурные решения молча.
+
+2. **Новое и концептуально важное — пользователь пишет сам.** Первый раз с новой
+   технологией (WebSocket-хендлер, миграция, OAuth-флоу, Redis Pub/Sub): агент
+   объясняет концепцию и показывает каркас/псевдокод, но финальную логику пишет
+   пользователь. Затем агент ревьюит.
+
+3. **Рутину пишет агент.** Boilerplate, конфиги, типы, Dockerfile, package.json —
+   пишет агент, пользователь ревьюит.
+
+4. **Всегда объяснять "почему", а не только "что".** Каждое нетривиальное решение
+   сопровождать кратким обоснованием и альтернативой.
+
+5. **Не убегать вперёд по плану.** Делаем строго по версиям v0→v7. Не добавлять
+   фичи из будущих версий раньше времени.
+
+## Git-коммиты (Conventional Commits)
+
+Все сообщения коммитов — по стандарту [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <описание в нижнем регистре, без точки в конце>
+```
+
+- **type** (обязательно): `feat` · `fix` · `docs` · `style` · `refactor` · `perf` ·
+  `test` · `build` · `ci` · `chore` · `revert`
+- **scope** (опционально): затронутая область — `api`, `widget-sdk`, `dashboard`,
+  `shared`, `infra`, `db`. Например: `feat(api): add /widget/session endpoint`.
+- **описание**: повелительное наклонение, на английском, до ~72 символов.
+- **breaking change**: `feat(api)!: ...` или строка `BREAKING CHANGE:` в теле.
+- Тело коммита (опционально) — после пустой строки, объясняет "почему".
+
+Примеры:
+
+```
+feat(db): add conversations and messages tables
+fix(widget-sdk): reconnect websocket after network drop
+chore(infra): bump postgres to 16 in docker-compose
+docs: describe v0 task breakdown
+```
+
+## Технические договорённости
+
+- **Пакетный менеджер:** pnpm (workspace monorepo)
+- **Язык:** TypeScript везде
+- **Node:** 22.x
+- **Backend:** NestJS (нативный `ws` через `WsAdapter` из `@nestjs/platform-ws`)
+- **Комментарии в коде:** на английском (общается агент по-русски)
+- **Стиль:** ESM-модули, strict TypeScript
+
+## Текущий этап
+
+**v0 — локальный MVP.** Скелет monorepo создан. Дальше: docker-compose (Postgres+Redis),
+backend, схема БД, widget SDK, dashboard.
