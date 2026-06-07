@@ -8,6 +8,10 @@
   },
   "packageManager": "pnpm@10.0.0",
   "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "migrate": "pnpm --filter @support-widget/api run migrate",
+    "seed": "pnpm --filter @support-widget/api run seed",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
     "infra:down": "docker compose -f infra/docker-compose.yml down"
   }
