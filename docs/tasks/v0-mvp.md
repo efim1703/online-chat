@@ -27,9 +27,9 @@ Docker Compose (Postgres + Redis).
 
 ## Шаг 3. `packages/shared` — общие типы
 
-- [ ] `v0-3.1` — `package.json` + `tsconfig` + сборка (tsup или tsc), экспорт типов для остальных пакетов.
-- [ ] `v0-3.2` — Enum-ы и DTO: `SenderType`, `ConversationStatus`, DTO сообщений и диалогов.
-- [ ] `v0-3.3` — Контракт WebSocket-событий (имена + payload-типы), единый источник правды:
+- [x] `v0-3.1` — `package.json` + `tsconfig` + сборка (tsup или tsc), экспорт типов для остальных пакетов.
+- [x] `v0-3.2` — Enum-ы и DTO: `SenderType`, `ConversationStatus`, DTO сообщений и диалогов.
+- [x] `v0-3.3` — Контракт WebSocket-событий (имена + payload-типы), единый источник правды:
   - client→server: `visitor:message:create`, `operator:message:create`, `conversation:join`, `conversation:leave`, `typing:start`, `typing:stop`
   - server→client: `message:created`, `message:delivered`, `message:read`, `conversation:updated`, `typing:started`, `typing:stopped`
 
