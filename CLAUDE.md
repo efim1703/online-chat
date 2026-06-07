@@ -28,6 +28,31 @@
 5. **Не убегать вперёд по плану.** Делаем строго по версиям v0→v7. Не добавлять
    фичи из будущих версий раньше времени.
 
+## Git-коммиты (Conventional Commits)
+
+Все сообщения коммитов — по стандарту [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <описание в нижнем регистре, без точки в конце>
+```
+
+- **type** (обязательно): `feat` · `fix` · `docs` · `style` · `refactor` · `perf` ·
+  `test` · `build` · `ci` · `chore` · `revert`
+- **scope** (опционально): затронутая область — `api`, `widget-sdk`, `dashboard`,
+  `shared`, `infra`, `db`. Например: `feat(api): add /widget/session endpoint`.
+- **описание**: повелительное наклонение, на английском, до ~72 символов.
+- **breaking change**: `feat(api)!: ...` или строка `BREAKING CHANGE:` в теле.
+- Тело коммита (опционально) — после пустой строки, объясняет "почему".
+
+Примеры:
+
+```
+feat(db): add conversations and messages tables
+fix(widget-sdk): reconnect websocket after network drop
+chore(infra): bump postgres to 16 in docker-compose
+docs: describe v0 task breakdown
+```
+
 ## Технические договорённости
 
 - **Пакетный менеджер:** pnpm (workspace monorepo)
