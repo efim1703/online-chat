@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   type ConversationDto,
   type CreateMessageInput,
@@ -12,6 +8,8 @@ import {
 import { DatabaseService } from '../database/database.service.js';
 import { MessagesService } from '../messages/messages.service.js';
 import {
+  CONVERSATION_COLUMNS,
+  MESSAGE_COLUMNS,
   type ConversationRow,
   type MessageRow,
   rowToConversationDto,
@@ -19,11 +17,6 @@ import {
 } from '../common/mappers.js';
 import { isUuid } from '../common/uuid.js';
 import type { WidgetSession } from './widget-session.guard.js';
-
-// Columns selected for a ConversationRow — kept in one place so every query
-// returns the exact shape rowToConversationDto expects.
-const CONVERSATION_COLS =
-  'id, project_id, visitor_id, assigned_user_id, status, created_at, updated_at';
 
 /**
  * Visitor-facing conversation operations, all scoped to the session's visitor.
@@ -44,7 +37,7 @@ export class WidgetConversationsService {
    */
   async createConversation(session: WidgetSession): Promise<ConversationDto> {
     const open = await this.db.query<ConversationRow>(
-      `SELECT ${CONVERSATION_COLS}
+      `SELECT ${CONVERSATION_COLUMNS}
        FROM conversations
        WHERE visitor_id = $1 AND project_id = $2 AND status <> 'closed'
        ORDER BY created_at DESC
@@ -58,7 +51,7 @@ export class WidgetConversationsService {
     const created = await this.db.query<ConversationRow>(
       `INSERT INTO conversations (project_id, visitor_id)
        VALUES ($1, $2)
-       RETURNING ${CONVERSATION_COLS}`,
+       RETURNING ${CONVERSATION_COLUMNS}`,
       [session.projectId, session.visitorId],
     );
     return rowToConversationDto(created.rows[0]);
@@ -72,8 +65,7 @@ export class WidgetConversationsService {
     await this.assertOwnedByVisitor(session, conversationId);
 
     const result = await this.db.query<MessageRow>(
-      `SELECT id, conversation_id, sender_type, sender_id, body,
-              created_at, delivered_at, read_at
+      `SELECT ${MESSAGE_COLUMNS}
        FROM messages
        WHERE conversation_id = $1
        ORDER BY created_at ASC`,
@@ -88,17 +80,14 @@ export class WidgetConversationsService {
     conversationId: string,
     input: CreateMessageInput,
   ): Promise<MessageDto> {
-    const body = input?.body?.trim();
-    if (!body) {
-      throw new BadRequestException('body is required');
-    }
+    // body is validated/trimmed by CreateMessageDto at the controller (v0-4.10).
     await this.assertOwnedByVisitor(session, conversationId);
 
     return this.messages.createMessage({
       conversationId,
       senderType: SenderType.Visitor,
       senderId: session.visitorId,
-      body,
+      body: input.body,
     });
   }
 

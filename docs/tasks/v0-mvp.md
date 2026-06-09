@@ -45,9 +45,9 @@ Docker Compose (Postgres + Redis).
 ### HTTP endpoints
 - [x] `v0-4.6` — `POST /widget/session` — по `public_key` создать/найти visitor, выдать session token (хеш в `widget_sessions`).
 - [x] `v0-4.7` — Widget conversations: `POST /widget/conversations`, `GET /widget/conversations/:id/messages`, `POST /widget/conversations/:id/messages`.
-- [ ] `v0-4.8` — Operator: `GET /operator/conversations`, `GET /operator/conversations/:id`, `POST /operator/conversations/:id/messages`, `PATCH /operator/conversations/:id` (status/assign).
-- [ ] `v0-4.9` — Dev-guard для operator-роутов (токен из seed; настоящий auth = v1).
-- [ ] `v0-4.10` — Глобальный `ValidationPipe` + DTO (class-validator); CORS (widget по `allowed_origins`, operator по origin dashboard); `GET /health`.
+- [x] `v0-4.8` — Operator: `GET /operator/conversations`, `GET /operator/conversations/:id`, `POST /operator/conversations/:id/messages`, `PATCH /operator/conversations/:id` (status/assign).
+- [x] `v0-4.9` — Dev-guard для operator-роутов (токен из seed; настоящий auth = v1).
+- [x] `v0-4.10` — Глобальный `ValidationPipe` + DTO (class-validator); CORS (widget по `allowed_origins`, operator по origin dashboard); `GET /health`.
 
 ### WebSocket (нативный ws)
 - [ ] `v0-4.11` — `main.ts`: `app.useWebSocketAdapter(new WsAdapter(app))` (`@nestjs/platform-ws`).

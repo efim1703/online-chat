@@ -11,6 +11,15 @@ import {
  * ISO-string DTOs shared with the widget and dashboard.
  */
 
+// Column lists kept next to the row types and mappers, so every query that
+// builds a ConversationRow / MessageRow selects exactly the shape the mapper
+// expects. Shared by the widget and operator services.
+export const CONVERSATION_COLUMNS =
+  'id, project_id, visitor_id, assigned_user_id, status, created_at, updated_at';
+
+export const MESSAGE_COLUMNS =
+  'id, conversation_id, sender_type, sender_id, body, created_at, delivered_at, read_at';
+
 export interface ConversationRow {
   id: string;
   project_id: string;

@@ -49,6 +49,18 @@ export interface CreateMessageInput {
 }
 
 /**
+ * Body for `PATCH /operator/conversations/:id` — partial update of a conversation.
+ *
+ * Both fields are optional; the operator sends only what changes:
+ *  - `status` moves the conversation through its lifecycle (open/assigned/closed);
+ *  - `assignedUserId` claims or releases the conversation (`null` = unassign).
+ */
+export interface UpdateConversationInput {
+  status?: ConversationStatus;
+  assignedUserId?: string | null;
+}
+
+/**
  * Body for `POST /widget/session`.
  *
  * `publicKey` identifies the project (maps to `projects.public_key`).

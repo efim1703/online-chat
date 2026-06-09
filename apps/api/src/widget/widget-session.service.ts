@@ -1,9 +1,5 @@
 import { randomBytes, createHash } from 'node:crypto';
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { CreateSessionInput, WidgetSessionDto } from '@support-widget/shared';
 import { DatabaseService } from '../database/database.service.js';
 import { isUuid } from '../common/uuid.js';
@@ -36,11 +32,7 @@ export class WidgetSessionService {
   constructor(private readonly db: DatabaseService) {}
 
   async createSession(input: CreateSessionInput): Promise<WidgetSessionDto> {
-    // No ValidationPipe until v0-4.10, so the body is raw — guard it here.
-    if (!input?.publicKey) {
-      throw new BadRequestException('publicKey is required');
-    }
-
+    // publicKey presence/shape is enforced by CreateSessionDto + global pipe (v0-4.10).
     // Resolve the project by its public key. An unknown key is an auth failure,
     // not a 404: we don't want to confirm which keys exist.
     const project = await this.db.query<{ id: string }>(

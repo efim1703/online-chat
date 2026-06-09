@@ -1,9 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
-import type {
-  ConversationDto,
-  CreateMessageInput,
-  MessageDto,
-} from '@support-widget/shared';
+import type { ConversationDto, MessageDto } from '@support-widget/shared';
+import { CreateMessageDto } from '../common/dto.js';
 import { WidgetConversationsService } from './widget-conversations.service.js';
 import {
   WidgetSessionCtx,
@@ -13,8 +10,8 @@ import {
 
 /**
  * Visitor-facing conversation routes. The guard validates the Bearer session
- * token (v0-4.6) and injects the WidgetSession. No ValidationPipe yet (v0-4.10),
- * so bodies are validated inside the service.
+ * token (v0-4.6) and injects the WidgetSession. Bodies are validated by the
+ * global ValidationPipe against the DTO classes (v0-4.10).
  */
 @Controller('widget/conversations')
 @UseGuards(WidgetSessionGuard)
@@ -41,7 +38,7 @@ export class WidgetConversationsController {
   postMessage(
     @WidgetSessionCtx() session: WidgetSession,
     @Param('id') id: string,
-    @Body() body: CreateMessageInput,
+    @Body() body: CreateMessageDto,
   ): Promise<MessageDto> {
     return this.conversations.postMessage(session, id, body);
   }
