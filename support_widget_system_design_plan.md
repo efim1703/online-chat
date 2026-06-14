@@ -6,6 +6,10 @@
 
 Проект: **виджет онлайн-чата поддержки для встраивания на сайты**.
 
+> **Это верхнеуровневый план** («что и почему»). Поэтапная реализация
+> детализируется в `docs/vN-implementation-plan.md` и задачах `docs/tasks/vN-*.md`.
+> Карта документации и поток работы — в [README.md](README.md#документация).
+
 Идея: владелец сайта вставляет JS-скрипт, на сайте появляется чат, посетитель пишет в поддержку, оператор отвечает из dashboard.
 
 Пример встраивания:
@@ -42,7 +46,11 @@
 - CI/CD;
 - деплой;
 - мониторинг;
-- оценка нагрузок и мощностей.
+- оценка нагрузок и мощностей;
+- загрузка файлов и вложения (в т.ч. большие);
+- object storage (S3/R2/MinIO);
+- presigned upload/download URLs;
+- multipart и resumable uploads (tus).
 
 ---
 
@@ -198,6 +206,11 @@ support-widget/
 6. Сообщения сохраняются в PostgreSQL.
 ```
 
+> **Вложения в v0 нет** — только текстовые сообщения. Загрузка файлов вводится
+> начиная с v2 сразу «правильно» (object storage + presigned URLs), чтобы не
+> городить в v0 наивное хранение на диске, которое всё равно пришлось бы выкинуть
+> при переходе на несколько инстансов. См. v2 и v6.
+
 ### Можно ли локально?
 
 Да, полностью.
@@ -285,6 +298,8 @@ CREATE TABLE widget_sessions (
   created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 ```
+
+> Таблица `attachments` появится в v2 вместе с object storage — в v0 её нет.
 
 ### Минимальные HTTP endpoints
 
@@ -489,7 +504,54 @@ api-2 отправляет событие operator dashboard
 - graceful shutdown
 - reconnect logic
 - message acknowledgement
+- object storage (MinIO) вместо локального диска
+- presigned upload URLs (direct-to-storage)
 ```
+
+### Файлы появляются именно здесь — и сразу правильно
+
+В v0 вложений не было. Вводим их в v2, потому что наивный путь (хранить файл
+на локальном диске инстанса) ломается ровно той же болью, что и WebSocket-
+сообщения в этой версии:
+
+```text
+Visitor загрузил файл на api-1 -> файл лёг бы на локальный диск api-1.
+Operator (или сам visitor) запросил файл, попал на api-2.
+На диске api-2 этого файла нет.
+```
+
+**Локальное состояние не шарится между инстансами.** Сообщения мы решаем через
+общий event bus (Redis), файлы — через **общее хранилище**: object storage.
+Поэтому в v2 не делаем «диск + proxy», а сразу проектируем правильно.
+
+### Решение для файлов: object storage + presigned URLs
+
+Локально поднимаем **MinIO** (S3-совместимое хранилище) в docker-compose —
+бесплатно и эмулирует API облачных S3/R2. Заводим таблицу `attachments`
+(`message_id`, `conversation_id`, `storage_key`, `file_name`, `content_type`,
+`size_bytes`, `status`). Поток загрузки:
+
+```text
+1. Клиент просит у API разрешение на загрузку (имя, размер, тип).
+2. API создаёт запись attachments (status = pending),
+   генерирует presigned PUT URL и отдаёт его клиенту.
+3. Клиент льёт байты НАПРЯМУЮ в MinIO по этому URL (минуя API).
+4. Клиент сообщает API, что загрузка завершена -> status = uploaded.
+5. Отдача файла — тоже через presigned GET URL (короткоживущий, с проверкой доступа).
+```
+
+Почему presigned, а не proxy через API:
+
+```text
+- API не держит тело файла в памяти и не тратит CPU/трафик на перекачку;
+- API не становится bottleneck при больших файлах;
+- горизонтально масштабируется: любой инстанс может выдать URL,
+  потому что состояние — в общем storage, а не на диске инстанса;
+- это индустриальный стандарт (Slack, Notion, GitHub).
+```
+
+> Большие файлы (multipart + resumable/tus) сознательно откладываем до v6 —
+> здесь достаточно presigned PUT одним запросом с лимитом размера.
 
 ### Что изучить
 
@@ -500,6 +562,9 @@ api-2 отправляет событие operator dashboard
 - load balancing
 - sticky sessions
 - horizontal scaling
+- object storage и S3 API
+- presigned URLs (upload и download)
+- почему direct-to-storage лучше proxy через API
 ```
 
 ---
@@ -745,9 +810,42 @@ Storage: Cloudflare R2 / S3
 ```text
 PostgreSQL -> managed database
 Redis -> managed Redis
-Attachments -> object storage
+Attachments -> object storage (MinIO -> Cloudflare R2 / S3)
 Dashboard -> static hosting
 widget.js -> CDN
+```
+
+MinIO из v2 заменяем на managed object storage (R2/S3). Поскольку оба
+S3-совместимы, меняется в основном конфиг (endpoint, ключи), а код почти нет —
+в этом и был смысл выбора S3 API ещё на v2.
+
+### Большие файлы: multipart + resumable (tus)
+
+Теперь, когда хранилище настоящее, доводим загрузку до больших файлов
+(видео, дампы логов, архивы на сотни МБ / единицы ГБ):
+
+```text
+Проблема одного PUT:
+- обрыв сети на 90% -> заливать всё заново;
+- таймауты и лимиты на размер одного запроса;
+- нет прогресса и параллелизма.
+
+Решение:
+- Multipart upload (S3 multipart): файл бьётся на части (например по 8–16 МБ),
+  части льются параллельно по своим presigned URL, storage собирает их в объект.
+- Resumable upload (протокол tus): клиент хранит offset загруженного,
+  после обрыва докачивает с места, а не с нуля.
+```
+
+Сопутствующее на этом этапе:
+
+```text
+- прогресс загрузки и докачка на клиенте (widget SDK);
+- очистка orphan-объектов: attachments со status = pending,
+  по которым загрузка не завершилась (lifecycle rules / cron-уборка);
+- presigned download для приватных файлов (короткий TTL, проверка доступа);
+- антивирус/валидация загруженного (например, проверка по событию из storage);
+- лимиты размера и квоты на проект (multi-tenant).
 ```
 
 ### Что изучить
@@ -758,7 +856,10 @@ widget.js -> CDN
 - database migrations в production
 - managed Redis
 - object storage
-- signed upload URLs
+- signed upload/download URLs
+- multipart upload (S3)
+- resumable uploads (tus protocol)
+- lifecycle rules и уборка orphan-объектов
 - secrets management
 - billing awareness
 ```
@@ -859,13 +960,13 @@ livenessProbe
 
 | Версия | Что делаешь | Можно локально? | Деньги |
 |---|---:|---:|---:|
-| v0 | MVP: widget, dashboard, API, WebSocket, PostgreSQL, Redis | Да | 0 € |
+| v0 | MVP: widget, dashboard, API, WebSocket, PostgreSQL, Redis; наивные вложения (диск + proxy) | Да | 0 € |
 | v1 | Google auth, organizations/projects, роли | Да | 0 € |
-| v2 | Несколько backend-инстансов, Redis Pub/Sub, Nginx load balancing | Да | 0 € |
+| v2 | Несколько backend-инстансов, Redis Pub/Sub, Nginx load balancing; object storage (MinIO) + presigned upload | Да | 0 € |
 | v3 | Публичное демо с HTTPS | Частично | 0–10 €/мес |
 | v4 | Домен, DNS, CDN для widget.js | Нет, если нужен настоящий домен | 10–25 €/год |
 | v5 | Production-like VPS | Нет | 5–15 €/мес |
-| v6 | Managed DB/Redis/observability | Нет | 10–50+ €/мес |
+| v6 | Managed DB/Redis/observability; managed object storage (R2/S3) + большие файлы (multipart, resumable/tus) | Нет | 10–50+ €/мес |
 | v7 | Kubernetes | Локально — да, облако — платно | 0 локально / 20–100+ €/мес |
 
 ---

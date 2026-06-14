@@ -16,11 +16,11 @@
 |---|---|---|
 | [v0](v0-mvp.md) ([план](../v0-implementation-plan.md)) | Локальный MVP: widget → API → WebSocket → Postgres → dashboard | 🚧 В работе |
 | v1 | Google Auth + multi-tenant (организации, проекты, роли) | ⬜ Не начато |
-| v2 | Несколько инстансов API + Redis Pub/Sub + Nginx LB | ⬜ Не начато |
+| v2 | Несколько инстансов API + Redis Pub/Sub + Nginx LB; object storage (MinIO) + presigned upload | ⬜ Не начато |
 | v3 | Публичное демо (HTTPS, tunnel/free hosting) | ⬜ Не начато |
 | v4 | Домен, DNS, CDN для widget.js | ⬜ Не начато |
 | v5 | Production-like VPS + Docker Compose deploy | ⬜ Не начато |
-| v6 | Managed DB/Redis/storage | ⬜ Не начато |
+| v6 | Managed DB/Redis/storage; большие файлы (multipart, resumable/tus) | ⬜ Не начато |
 | v7 | Kubernetes | ⬜ Не начато |
 
 Легенда статусов: ⬜ не начато · 🚧 в работе · ✅ готово
