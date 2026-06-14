@@ -1,0 +1,17 @@
+{
+  "name": "@support-widget/widget-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@support-widget/shared": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3"
+  }
+}

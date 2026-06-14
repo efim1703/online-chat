@@ -57,11 +57,11 @@ Docker Compose (Postgres + Redis).
 
 ## Шаг 5. `packages/widget-sdk` — `widget.js`
 
-- [ ] `v0-5.1` — `package.json` + конфиг tsup (один бандл, без тяжёлого runtime).
-- [ ] `v0-5.2` — Чтение `data-project-id` / public key из `<script>`-тега; конфиг API/WS URL.
-- [ ] `v0-5.3` — Поток: `POST /widget/session` → token → WS (`?token=`) → `conversation:join`.
-- [ ] `v0-5.4` — UI: плавающая кнопка + панель чата, изоляция стилей через Shadow DOM.
-- [ ] `v0-5.5` — Отправка/приём сообщений в UI (рендер `message:created`).
+- [x] `v0-5.1` — `package.json` + конфиг tsup (один бандл, без тяжёлого runtime).
+- [x] `v0-5.2` — Чтение `data-project-id` / public key из `<script>`-тега; конфиг API/WS URL.
+- [x] `v0-5.3` — Поток: `POST /widget/session` → token → WS (`?token=`) → `conversation:join`.
+- [x] `v0-5.4` — UI: плавающая кнопка + панель чата, изоляция стилей через Shadow DOM.
+- [x] `v0-5.5` — Отправка/приём сообщений в UI (рендер `message:created`).
 
 ## Шаг 6. `apps/widget-demo-site`
 

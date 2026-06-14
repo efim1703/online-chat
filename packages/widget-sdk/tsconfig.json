@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    // Bundler-резолюция: пути импортов без расширения .js (бандлит tsup/esbuild),
+    // в отличие от NodeNext в api/shared.
+    "moduleResolution": "Bundler",
+    // Код виджета живёт в браузере → подключаем DOM-типы (а не Node).
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+
+    // Типизация только проверяется (tsc --noEmit); код собирает tsup.
+    "noEmit": true,
+
+    "strict": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src", "tsup.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}
