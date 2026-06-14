@@ -5,6 +5,7 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { WsAdapter } from '@nestjs/platform-ws';
 // NodeNext ESM requires the .js extension on relative imports.
 import { AppModule } from './app.module.js';
 import { buildCorsOptions } from './common/cors.js';
@@ -13,6 +14,12 @@ import { DatabaseService } from './database/database.service.js';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
+
+  // Realtime transport: switch Nest's default (Socket.IO) WebSocket adapter for
+  // the native `ws`-based one. RealtimeGateway then speaks the JSON `{ event, data }`
+  // envelope from @support-widget/shared. Must be set before app.listen so the
+  // gateway binds to the same HTTP server (a single port for HTTP + WS).
+  app.useWebSocketAdapter(new WsAdapter(app));
 
   // Global validation: every @Body() typed as a DTO class is run through
   // class-validator. whitelist strips unknown props; transform builds real DTO

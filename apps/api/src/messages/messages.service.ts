@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { MessageDto, SenderType } from '@support-widget/shared';
 import { DatabaseService } from '../database/database.service.js';
+import { RealtimeRegistry } from '../realtime/realtime-registry.service.js';
 import { type MessageRow, rowToMessageDto } from '../common/mappers.js';
 
 /** Everything needed to persist one message. */
@@ -13,16 +14,16 @@ export interface CreateMessageParams {
 }
 
 /**
- * Owns message persistence — the single place a message row is created, shared
- * by widget and operator HTTP routes.
- *
- * v0-4.7: persist only. v0-4.13 will extend createMessage to also broadcast
- * `message:created` over WebSocket, so both HTTP and the gateway go through here
- * and the persist→fanout logic is never duplicated.
+ * The single place a message row is created — and (v0-4.13) the single place it
+ * is broadcast — so every caller (widget HTTP route, operator HTTP route, the WS
+ * gateway) gets identical persist→fanout behaviour with no duplication.
  */
 @Injectable()
 export class MessagesService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly realtime: RealtimeRegistry,
+  ) {}
 
   async createMessage(params: CreateMessageParams): Promise<MessageDto> {
     const { conversationId, senderType, senderId, body } = params;
@@ -41,6 +42,13 @@ export class MessagesService {
       [conversationId],
     );
 
-    return rowToMessageDto(inserted.rows[0]);
+    const message = rowToMessageDto(inserted.rows[0]);
+
+    // v0-4.13: разослать сохранённое сообщение в комнату диалога, чтобы все
+    // подключённые клиенты (виджет посетителя + дашборд оператора) получили его
+    // в реальном времени. Единое место persist→broadcast для HTTP и WS.
+    this.realtime.broadcast(conversationId, 'message:created', message);
+
+    return message;
   }
 }

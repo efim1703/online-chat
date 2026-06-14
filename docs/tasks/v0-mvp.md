@@ -50,10 +50,10 @@ Docker Compose (Postgres + Redis).
 - [x] `v0-4.10` — Глобальный `ValidationPipe` + DTO (class-validator); CORS (widget по `allowed_origins`, operator по origin dashboard); `GET /health`.
 
 ### WebSocket (нативный ws)
-- [ ] `v0-4.11` — `main.ts`: `app.useWebSocketAdapter(new WsAdapter(app))` (`@nestjs/platform-ws`).
-- [ ] `v0-4.12` — `RealtimeGateway`: авторизация по токену в query; in-process registry соединений по `conversationId`; `conversation:join`/`leave`.
-- [ ] `v0-4.13` — `MessagesService` (единый для HTTP и WS): «сохранить в PG → разослать `message:created` в комнату».
-- [ ] `v0-4.14` — Typing-события: трансляция в комнату без записи в БД.
+- [x] `v0-4.11` — `main.ts`: `app.useWebSocketAdapter(new WsAdapter(app))` (`@nestjs/platform-ws`).
+- [x] `v0-4.12` — `RealtimeGateway`: авторизация по токену в query; in-process registry соединений по `conversationId`; `conversation:join`/`leave`.
+- [x] `v0-4.13` — `MessagesService` (единый для HTTP и WS): «сохранить в PG → разослать `message:created` в комнату».
+- [x] `v0-4.14` — Typing-события: трансляция в комнату без записи в БД.
 
 ## Шаг 5. `packages/widget-sdk` — `widget.js`
 
