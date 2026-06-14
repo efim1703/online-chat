@@ -65,7 +65,7 @@ Docker Compose (Postgres + Redis).
 
 ## Шаг 6. `apps/widget-demo-site`
 
-- [ ] `v0-6.1` — Статический `index.html`, подключает собранный `widget.js` с `data-project-id` из seed (тест CORS/embed).
+- [x] `v0-6.1` — Статический `index.html`, подключает собранный `widget.js` с `data-project-id` из seed (тест CORS/embed).
 
 ## Шаг 7. `apps/dashboard` — Vite + React
 
