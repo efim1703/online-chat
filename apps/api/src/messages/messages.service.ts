@@ -4,19 +4,19 @@ import { DatabaseService } from '../database/database.service.js';
 import { RealtimeRegistry } from '../realtime/realtime-registry.service.js';
 import { type MessageRow, rowToMessageDto } from '../common/mappers.js';
 
-/** Everything needed to persist one message. */
+/** Всё необходимое для сохранения одного сообщения. */
 export interface CreateMessageParams {
   conversationId: string;
   senderType: SenderType;
-  /** Visitor or user id; null for `system` messages. */
+  /** Id посетителя или пользователя; null для `system`-сообщений. */
   senderId: string | null;
   body: string;
 }
 
 /**
- * The single place a message row is created — and (v0-4.13) the single place it
- * is broadcast — so every caller (widget HTTP route, operator HTTP route, the WS
- * gateway) gets identical persist→fanout behaviour with no duplication.
+ * Единственное место, где создаётся строка сообщения — и (v0-4.13) единственное место,
+ * где оно рассылается — поэтому каждый вызывающий (HTTP-маршрут виджета, HTTP-маршрут
+ * оператора, WS-gateway) получает идентичное поведение persist→fanout без дублирования.
  */
 @Injectable()
 export class MessagesService {
@@ -36,7 +36,7 @@ export class MessagesService {
       [conversationId, senderType, senderId, body],
     );
 
-    // Bump the conversation so the dashboard can sort by most-recent activity.
+    // Обновляем диалог, чтобы дашборд мог сортировать по последней активности.
     await this.db.query(
       'UPDATE conversations SET updated_at = now() WHERE id = $1',
       [conversationId],

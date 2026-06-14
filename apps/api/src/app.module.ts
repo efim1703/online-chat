@@ -10,14 +10,14 @@ import { RealtimeModule } from './realtime/realtime.module.js';
 import { RealtimeGateway } from './realtime/realtime.gateway.js';
 import { HealthController } from './health/health.controller.js';
 
-// Resolve the monorepo-root .env relative to this file (not cwd), so the api
-// finds it regardless of where it was launched from. This module lives at
-// apps/api/{src,dist}/app.module — three levels below the repo root.
+// Путь к .env в корне монорепо, относительно этого файла (не cwd), чтобы api
+// находил его независимо от того, откуда был запущен. Модуль находится на три
+// уровня ниже корня репозитория: apps/api/{src,dist}/app.module.
 const rootEnvPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env');
 
-// Root module. RealtimeGateway is registered here (not inside RealtimeModule) so
-// it can inject both RealtimeRegistry (RealtimeModule) and MessagesService
-// (MessagesModule) without creating a module-level import cycle.
+// Корневой модуль. RealtimeGateway регистрируется здесь (не внутри RealtimeModule),
+// чтобы он мог инжектить RealtimeRegistry (RealtimeModule) и MessagesService
+// (MessagesModule) без циклической зависимости на уровне модулей.
 @Module({
   imports: [
     ConfigModule.forRoot({

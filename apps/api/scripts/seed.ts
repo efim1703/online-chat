@@ -1,49 +1,49 @@
-// reflect-metadata must load before any decorated class, same as in main.ts —
-// the Nest DI container reads the metadata TypeScript emits for the providers.
+// reflect-metadata должен загружаться до любого декорированного класса, как и в main.ts —
+// DI-контейнер Nest читает метаданные, которые TypeScript эмитирует для провайдеров.
 import 'reflect-metadata';
 
 import { NestFactory } from '@nestjs/core';
-// NodeNext ESM resolution wants the .js extension even from a .ts source (tsx maps it).
+// NodeNext ESM-резолюция требует расширение .js даже для .ts-источника (tsx его маппит).
 import { AppModule } from '../src/app.module.js';
 import { DatabaseService } from '../src/database/database.service.js';
 
 /**
- * Local-only seed for v0 (no auth yet — auth lands in v1).
+ * Локальный сид для v0 (авторизации ещё нет — она появится в v1).
  *
- * Inserts the minimum the manual e2e loop needs:
- *   - one organization
- *   - one project with a KNOWN public_key + the demo-site origin in allowed_origins,
- *     so widget-demo-site can hardcode it as data-project-id and pass CORS
- *   - one operator user
+ * Вставляет минимально необходимые для ручного e2e-цикла данные:
+ *   - одну организацию
+ *   - один проект с ИЗВЕСТНЫМ public_key + origin демо-сайта в allowed_origins,
+ *     чтобы widget-demo-site мог захардкодить его как data-project-id и пройти CORS
+ *   - одного оператора
  *
- * Visitors / conversations / messages / widget_sessions are created at runtime
- * by the API (tasks v0-4.6..4.8), so they are deliberately NOT seeded here.
+ * Посетители / диалоги / сообщения / widget_sessions создаются в рантайме
+ * через API (задачи v0-4.6..4.8) и намеренно НЕ сидируются здесь.
  *
- * Idempotent: fixed UUIDs + ON CONFLICT mean `pnpm seed` can run any number of
- * times without duplicates or UNIQUE violations.
+ * Идемпотентен: фиксированные UUID + ON CONFLICT гарантируют, что `pnpm seed`
+ * можно запускать любое число раз без дублей и нарушений UNIQUE.
  */
 
-// Fixed identifiers keep the seed idempotent and let other packages reference
-// stable values during local development.
+// Фиксированные идентификаторы делают сид идемпотентным и позволяют другим
+// пакетам ссылаться на стабильные значения во время локальной разработки.
 const ORG_ID = '00000000-0000-0000-0000-000000000001';
 const PROJECT_ID = '00000000-0000-0000-0000-000000000002';
 const OPERATOR_ID = '00000000-0000-0000-0000-000000000003';
 
-// Known public key the widget embeds as data-project-id (see widget-demo-site, v0-6.1).
+// Известный публичный ключ, который виджет встраивает как data-project-id (см. widget-demo-site, v0-6.1).
 const PROJECT_PUBLIC_KEY = 'pk_demo_local';
-// Origin of widget-demo-site (Vite :5173). Dashboard runs on :5174 (operator CORS).
+// Origin виджет-демо-сайта (Vite :5173). Дашборд работает на :5174 (CORS оператора).
 const DEMO_ORIGIN = 'http://localhost:5173';
 
 async function seed(): Promise<void> {
-  // Standalone Nest context (no HTTP server) — reuses ConfigModule (.env) and the
-  // shared DatabaseService pool exactly as the running app would.
+  // Standalone-контекст Nest (без HTTP-сервера) — переиспользует ConfigModule (.env) и
+  // пул DatabaseService ровно так же, как работающее приложение.
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['error', 'warn'],
   });
   const db = app.get(DatabaseService);
 
   try {
-    // Organization. ON CONFLICT (id) DO NOTHING: re-running keeps the existing row.
+    // Организация. ON CONFLICT (id) DO NOTHING: повторный запуск сохраняет существующую строку.
     await db.query(
       `INSERT INTO organizations (id, name)
        VALUES ($1, $2)
@@ -51,8 +51,8 @@ async function seed(): Promise<void> {
       [ORG_ID, 'Acme Inc'],
     );
 
-    // Project. DO UPDATE so re-seeding can refresh the demo origin / public_key
-    // (e.g. if we move the demo-site to another port) without a manual edit.
+    // Проект. DO UPDATE позволяет обновить origin / public_key при повторном сиде
+    // (например, если демо-сайт переехал на другой порт) без ручного редактирования.
     await db.query(
       `INSERT INTO projects (id, organization_id, name, public_key, allowed_origins)
        VALUES ($1, $2, $3, $4, $5)
@@ -62,7 +62,7 @@ async function seed(): Promise<void> {
       [PROJECT_ID, ORG_ID, 'Acme Website', PROJECT_PUBLIC_KEY, [DEMO_ORIGIN]],
     );
 
-    // Operator user. Real auth (Google) is v1; here we just need a row with role='operator'.
+    // Пользователь-оператор. Настоящая авторизация (Google) — в v1; здесь нужна лишь строка с role='operator'.
     await db.query(
       `INSERT INTO users (id, organization_id, email, name, role)
        VALUES ($1, $2, $3, $4, $5)
@@ -70,7 +70,7 @@ async function seed(): Promise<void> {
       [OPERATOR_ID, ORG_ID, 'operator@demo.local', 'Demo Operator', 'operator'],
     );
 
-    // eslint-disable-next-line no-console -- seed is a CLI script, console is the UI
+    // eslint-disable-next-line no-console -- сид — CLI-скрипт, console здесь и есть UI
     console.log(
       `Seed OK\n` +
         `  organization : ${ORG_ID} (Acme Inc)\n` +
@@ -79,13 +79,13 @@ async function seed(): Promise<void> {
         `  operator     : ${OPERATOR_ID} (operator@demo.local)`,
     );
   } finally {
-    // Closing the context ends the pool, so the process exits cleanly.
+    // Закрытие контекста завершает пул, и процесс выходит корректно.
     await app.close();
   }
 }
 
 seed().catch((err: unknown) => {
-  // eslint-disable-next-line no-console -- surface the failure to the CLI
+  // eslint-disable-next-line no-console -- вывести ошибку в CLI
   console.error('Seed failed:', err);
   process.exit(1);
 });

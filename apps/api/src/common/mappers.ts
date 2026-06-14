@@ -6,14 +6,14 @@ import {
 } from '@support-widget/shared';
 
 /**
- * Raw row shapes as node-postgres returns them: snake_case columns, TIMESTAMP
- * columns parsed into JS `Date`. The mappers below turn them into the camelCase,
- * ISO-string DTOs shared with the widget and dashboard.
+ * Формы сырых строк в том виде, в каком их возвращает node-postgres: snake_case-колонки,
+ * TIMESTAMP-колонки распарсены в JS `Date`. Маппперы ниже преобразуют их в camelCase
+ * ISO-строковые DTO, которые используются виджетом и дашбордом.
  */
 
-// Column lists kept next to the row types and mappers, so every query that
-// builds a ConversationRow / MessageRow selects exactly the shape the mapper
-// expects. Shared by the widget and operator services.
+// Списки колонок хранятся рядом с типами строк и маппперами, чтобы каждый запрос,
+// строящий ConversationRow / MessageRow, выбирал ровно ту форму, которую ожидает маппер.
+// Используются совместно сервисами виджета и оператора.
 export const CONVERSATION_COLUMNS =
   'id, project_id, visitor_id, assigned_user_id, status, created_at, updated_at';
 
@@ -47,7 +47,7 @@ export function rowToConversationDto(r: ConversationRow): ConversationDto {
     projectId: r.project_id,
     visitorId: r.visitor_id,
     assignedUserId: r.assigned_user_id,
-    // status/sender_type are TEXT in PG but constrained to our enums in app code.
+    // status/sender_type — TEXT в PG, но ограничены нашими enum'ами в коде приложения.
     status: r.status as ConversationStatus,
     createdAt: r.created_at.toISOString(),
     updatedAt: r.updated_at.toISOString(),

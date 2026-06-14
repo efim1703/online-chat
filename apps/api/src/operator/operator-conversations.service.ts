@@ -21,10 +21,10 @@ import { isUuid } from '../common/uuid.js';
 import type { OperatorContext } from './operator.guard.js';
 
 /**
- * Operator-facing conversation operations. Everything is scoped to the
- * operator's organization: a conversation belongs to a project, a project to an
- * organization, so we always join `projects` and filter by organization_id. An
- * operator can never touch a conversation from another org, even by guessing a UUID.
+ * Операции с диалогами для операторов. Всё ограничено организацией оператора:
+ * диалог принадлежит проекту, проект — организации, поэтому мы всегда делаем JOIN
+ * с `projects` и фильтруем по organization_id. Оператор никогда не сможет
+ * обратиться к диалогу другой организации, даже угадав UUID.
  */
 @Injectable()
 export class OperatorConversationsService {
@@ -33,7 +33,7 @@ export class OperatorConversationsService {
     private readonly messages: MessagesService,
   ) {}
 
-  /** GET /operator/conversations — inbox, most recently active first. */
+  /** GET /operator/conversations — входящие, отсортированные по последней активности. */
   async listConversations(ctx: OperatorContext): Promise<ConversationDto[]> {
     const result = await this.db.query<ConversationRow>(
       `SELECT ${prefixed(CONVERSATION_COLUMNS, 'c')}
@@ -46,7 +46,7 @@ export class OperatorConversationsService {
     return result.rows.map(rowToConversationDto);
   }
 
-  /** GET /operator/conversations/:id — single conversation in the operator's org. */
+  /** GET /operator/conversations/:id — один диалог в рамках организации оператора. */
   async getConversation(
     ctx: OperatorContext,
     conversationId: string,
@@ -55,14 +55,14 @@ export class OperatorConversationsService {
     return rowToConversationDto(row);
   }
 
-  /** POST /operator/conversations/:id/messages — persist an operator reply. */
+  /** POST /operator/conversations/:id/messages — сохраняет ответ оператора. */
   async postMessage(
     ctx: OperatorContext,
     conversationId: string,
     input: CreateMessageInput,
   ): Promise<MessageDto> {
     await this.findInOrg(ctx, conversationId);
-    // body is already validated/trimmed by CreateMessageDto at the controller.
+    // body уже провалидировано и обрезано через CreateMessageDto на уровне контроллера.
     return this.messages.createMessage({
       conversationId,
       senderType: SenderType.Operator,
@@ -72,11 +72,11 @@ export class OperatorConversationsService {
   }
 
   /**
-   * PATCH /operator/conversations/:id — partial update of status and/or assignee.
+   * PATCH /operator/conversations/:id — частичное обновление статуса и/или исполнителя.
    *
-   * Builds the SET clause dynamically from whichever fields are present, so the
-   * operator can change status, (un)assign, or both in one call. Touching nothing
-   * is a 400 — an empty PATCH is a client mistake, not a no-op we want to hide.
+   * SET-клаузула строится динамически из переданных полей, так что оператор может
+   * изменить статус, (снять) назначение или и то и другое в одном вызове.
+   * Пустой PATCH — ошибка клиента (400), а не no-op, который стоит скрывать.
    */
   async updateConversation(
     ctx: OperatorContext,
@@ -93,14 +93,14 @@ export class OperatorConversationsService {
       sets.push(`status = $${params.length}`);
     }
     if (input.assignedUserId !== undefined) {
-      params.push(input.assignedUserId); // may be null = unassign
+      params.push(input.assignedUserId); // может быть null = снять назначение
       sets.push(`assigned_user_id = $${params.length}`);
     }
     if (sets.length === 0) {
       throw new BadRequestException('nothing to update');
     }
 
-    // Always bump updated_at so the inbox re-sorts on any change.
+    // Всегда обновляем updated_at, чтобы inbox пересортировался при любом изменении.
     params.push(conversationId);
     const updated = await this.db.query<ConversationRow>(
       `UPDATE conversations
@@ -113,9 +113,9 @@ export class OperatorConversationsService {
   }
 
   /**
-   * Loads a conversation and asserts it belongs to the operator's organization.
-   * Malformed id -> 404 (so junk never reaches the uuid column); unknown or
-   * foreign-org id -> 404 (we don't reveal which conversations exist elsewhere).
+   * Загружает диалог и проверяет, что он принадлежит организации оператора.
+   * Некорректный id → 404 (мусор не попадёт в uuid-колонку); неизвестный
+   * или чужой id → 404 (не раскрываем, какие диалоги существуют в других организациях).
    */
   private async findInOrg(
     ctx: OperatorContext,
@@ -138,9 +138,9 @@ export class OperatorConversationsService {
   }
 }
 
-// Qualify a comma-separated column list with a table alias, so a JOIN query
-// (conversations c JOIN projects p) selects unambiguous c.* columns while still
-// returning the exact shape rowToConversationDto expects.
+// Добавляет псевдоним таблицы к comma-separated списку колонок, чтобы JOIN-запрос
+// (conversations c JOIN projects p) выбирал однозначные c.*-колонки и при этом
+// возвращал ровно ту форму, которую ожидает rowToConversationDto.
 function prefixed(columns: string, alias: string): string {
   return columns
     .split(',')

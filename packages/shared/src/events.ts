@@ -1,19 +1,19 @@
 /**
- * WebSocket contract — the single source of truth for the realtime protocol.
+ * WebSocket-контракт — единственный источник правды для realtime-протокола.
  *
- * Wire format is a JSON envelope `{ event, data }`. Event names are fixed by the
- * design doc (support_widget_system_design_plan.md → "WebSocket events").
+ * Wire-формат — JSON-конверт `{ event, data }`. Имена событий зафиксированы
+ * в design-doc (support_widget_system_design_plan.md → «WebSocket events»).
  *
- * The contract is expressed as two typed event maps (name -> payload). From them
- * we derive the discriminated-union envelope types, so consumers get both:
- *  - a direct name->payload lookup for typed send/emit helpers, and
- *  - a union to `switch (msg.event)` on when receiving.
+ * Контракт выражен двумя типизированными event-картами (имя → payload). Из них
+ * выводятся discriminated-union типы конвертов, так что потребители получают:
+ *  - прямой lookup имя→payload для типизированных send/emit-хелперов;
+ *  - union для `switch (msg.event)` при получении сообщений.
  */
 
 import type { ConversationDto, MessageDto } from './dto.js';
 import type { SenderType } from './enums.js';
 
-/** Messages a client (widget or dashboard) sends to the server. */
+/** Сообщения, которые клиент (виджет или дашборд) отправляет серверу. */
 export interface ClientToServerEvents {
   'conversation:join': { conversationId: string };
   'conversation:leave': { conversationId: string };
@@ -23,7 +23,7 @@ export interface ClientToServerEvents {
   'typing:stop': { conversationId: string };
 }
 
-/** Messages the server broadcasts to clients. */
+/** Сообщения, которые сервер рассылает клиентам. */
 export interface ServerToClientEvents {
   'message:created': MessageDto;
   'message:delivered': {
@@ -41,25 +41,25 @@ export interface ServerToClientEvents {
   'typing:stopped': { conversationId: string; senderType: SenderType };
 }
 
-/** Union of valid client->server / server->client event names. */
+/** Union допустимых имён событий client→server / server→client. */
 export type ClientToServerEvent = keyof ClientToServerEvents;
 export type ServerToClientEvent = keyof ServerToClientEvents;
 
-/** Generic wire envelope: `{ event, data }`. */
+/** Обобщённый wire-конверт: `{ event, data }`. */
 export interface WsEnvelope<Event extends string, Data> {
   event: Event;
   data: Data;
 }
 
 /**
- * Discriminated union of every client->server envelope, derived from the map.
- * Lets the gateway narrow `data` by `switch (msg.event)`.
+ * Discriminated union всех client→server конвертов, выведенный из карты.
+ * Позволяет gateway сужать `data` через `switch (msg.event)`.
  */
 export type WsClientMessage = {
   [Event in ClientToServerEvent]: WsEnvelope<Event, ClientToServerEvents[Event]>;
 }[ClientToServerEvent];
 
-/** Discriminated union of every server->client envelope, derived from the map. */
+/** Discriminated union всех server→client конвертов, выведенный из карты. */
 export type WsServerMessage = {
   [Event in ServerToClientEvent]: WsEnvelope<Event, ServerToClientEvents[Event]>;
 }[ServerToClientEvent];

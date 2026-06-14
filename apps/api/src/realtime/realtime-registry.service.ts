@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-// ws is CommonJS: default-import the class (we need the WebSocket.OPEN constant
-// and the type). Works under NodeNext thanks to esModuleInterop.
+// ws — CommonJS: дефолтный импорт класса (нужна константа WebSocket.OPEN и тип).
+// Работает под NodeNext благодаря esModuleInterop.
 import WebSocket from 'ws';
 import type {
   ServerToClientEvent,
@@ -8,27 +8,27 @@ import type {
 } from '@support-widget/shared';
 
 /**
- * In-process registry of live WebSocket connections, grouped into "rooms" by
- * conversationId. It is the single owner of realtime fan-out state, so two very
- * different callers can reach the sockets without depending on each other:
+ * Внутрипроцессный реестр активных WebSocket-соединений, сгруппированных по «комнатам»
+ * (conversationId). Единственный владелец состояния realtime fan-out, что позволяет
+ * двум разным вызывающим добираться до сокетов без зависимости друг от друга:
  *
- *   - RealtimeGateway   -> join/leave/cleanup as sockets connect and disconnect;
- *   - MessagesService   -> broadcast `message:created` right after the INSERT.
+ *   - RealtimeGateway   -> join/leave/cleanup при подключении и отключении сокетов;
+ *   - MessagesService   -> рассылает `message:created` сразу после INSERT.
  *
- * This avoids a circular dependency: the gateway needs MessagesService (to
- * persist), and MessagesService needs to broadcast — if the gateway also owned
- * broadcast, the two would depend on each other. The registry breaks that cycle.
+ * Это позволяет избежать циклической зависимости: gateway нужен MessagesService
+ * (для сохранения), а MessagesService нужна рассылка — если бы gateway владел ею,
+ * они зависели бы друг от друга. Реестр разрывает этот цикл.
  *
- * v0 keeps everything in this one process's memory. In v2 (multiple API
- * instances) this Map is exactly what gets replaced by Redis Pub/Sub, so a
- * message saved on instance A reaches a socket held by instance B.
+ * v0 хранит всё в памяти одного процесса. В v2 (несколько экземпляров API) именно
+ * этот Map заменяется Redis Pub/Sub, чтобы сообщение, сохранённое на instance A,
+ * доходило до сокета, удерживаемого instance B.
  */
 @Injectable()
 export class RealtimeRegistry {
-  // conversationId -> sockets currently watching that conversation.
+  // conversationId -> сокеты, которые сейчас наблюдают этот диалог.
   private readonly rooms = new Map<string, Set<WebSocket>>();
 
-  /** Add a socket to a conversation's room (creating the room on first join). */
+  /** Добавляет сокет в комнату диалога (создаёт комнату при первом подключении). */
   join(conversationId: string, socket: WebSocket): void {
     let room = this.rooms.get(conversationId);
     if (!room) {
@@ -38,7 +38,7 @@ export class RealtimeRegistry {
     room.add(socket);
   }
 
-  /** Remove a socket from one room; drop the room once it is empty. */
+  /** Удаляет сокет из комнаты; удаляет комнату, когда она становится пустой. */
   leave(conversationId: string, socket: WebSocket): void {
     const room = this.rooms.get(conversationId);
     if (!room) return;
@@ -49,8 +49,8 @@ export class RealtimeRegistry {
   }
 
   /**
-   * Remove a socket from every room it joined. Called on disconnect, when we no
-   * longer know (or care) which conversations it was in.
+   * Удаляет сокет из всех комнат, в которые он вошёл. Вызывается при отключении,
+   * когда нам уже неизвестно (и неважно), в каких диалогах он находился.
    */
   removeFromAll(socket: WebSocket): void {
     for (const [conversationId, room] of this.rooms) {
@@ -61,11 +61,11 @@ export class RealtimeRegistry {
   }
 
   /**
-   * Send one server->client event to every socket in a conversation's room.
+   * Отправляет одно server→client событие всем сокетам в комнате диалога.
    *
-   * The wire format is the shared `{ event, data }` envelope. The event name and
-   * payload are tied together by ServerToClientEvents, so a wrong payload for a
-   * given event is a compile error here — the contract is enforced at the edge.
+   * Wire-формат — общий конверт `{ event, data }`. Имя события и payload связаны
+   * через ServerToClientEvents, поэтому неправильный payload для конкретного события
+   * даёт ошибку компиляции — контракт соблюдается на границе.
    */
   broadcast<E extends ServerToClientEvent>(
     conversationId: string,
@@ -77,7 +77,7 @@ export class RealtimeRegistry {
 
     const frame = JSON.stringify({ event, data });
     for (const socket of room) {
-      // Skip sockets mid-close: sending to them would throw.
+      // Пропускаем сокеты в процессе закрытия: отправка им вызовет исключение.
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(frame);
       }

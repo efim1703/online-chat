@@ -19,9 +19,9 @@ import { isUuid } from '../common/uuid.js';
 import type { WidgetSession } from './widget-session.guard.js';
 
 /**
- * Visitor-facing conversation operations, all scoped to the session's visitor.
- * Conversations are never looked up by id alone — always by (id, visitor_id) —
- * so one visitor can't read another's chat just by guessing a UUID.
+ * Операции с диалогами для посетителей, все ограничены посетителем текущей сессии.
+ * Диалоги никогда не ищутся только по id — всегда по (id, visitor_id) —
+ * чтобы один посетитель не мог прочитать чужой чат, угадав UUID.
  */
 @Injectable()
 export class WidgetConversationsService {
@@ -31,9 +31,9 @@ export class WidgetConversationsService {
   ) {}
 
   /**
-   * POST /widget/conversations — reuse the visitor's current open conversation
-   * if there is one, otherwise create a fresh one. Reusing avoids piling up
-   * empty `open` conversations every time the widget re-opens.
+   * POST /widget/conversations — переиспользует текущий открытый диалог посетителя,
+   * если он есть, иначе создаёт новый. Переиспользование предотвращает накопление
+   * пустых `open`-диалогов при каждом повторном открытии виджета.
    */
   async createConversation(session: WidgetSession): Promise<ConversationDto> {
     const open = await this.db.query<ConversationRow>(
@@ -57,7 +57,7 @@ export class WidgetConversationsService {
     return rowToConversationDto(created.rows[0]);
   }
 
-  /** GET /widget/conversations/:id/messages — full history, oldest first. */
+  /** GET /widget/conversations/:id/messages — полная история, от старых к новым. */
   async listMessages(
     session: WidgetSession,
     conversationId: string,
@@ -74,13 +74,13 @@ export class WidgetConversationsService {
     return result.rows.map(rowToMessageDto);
   }
 
-  /** POST /widget/conversations/:id/messages — persist a visitor message. */
+  /** POST /widget/conversations/:id/messages — сохраняет сообщение посетителя. */
   async postMessage(
     session: WidgetSession,
     conversationId: string,
     input: CreateMessageInput,
   ): Promise<MessageDto> {
-    // body is validated/trimmed by CreateMessageDto at the controller (v0-4.10).
+    // body уже провалидировано и обрезано через CreateMessageDto в контроллере (v0-4.10).
     await this.assertOwnedByVisitor(session, conversationId);
 
     return this.messages.createMessage({
@@ -92,10 +92,10 @@ export class WidgetConversationsService {
   }
 
   /**
-   * Guards every `:id` route: the conversation must exist AND belong to the
-   * session's visitor. A malformed id is treated as "not found" so junk never
-   * reaches the uuid column. We return 404 (not 403) to avoid revealing which
-   * conversation ids exist.
+   * Защищает каждый маршрут с `:id`: диалог должен существовать И принадлежать
+   * посетителю текущей сессии. Некорректный id трактуется как «не найдено», чтобы
+   * мусор не попадал в uuid-колонку. Возвращаем 404 (не 403), чтобы не раскрывать,
+   * какие id диалогов существуют.
    */
   private async assertOwnedByVisitor(
     session: WidgetSession,

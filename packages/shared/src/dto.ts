@@ -1,21 +1,21 @@
 /**
- * Data Transfer Objects — the JSON shapes that travel over HTTP and WebSocket.
+ * Data Transfer Objects — JSON-формы, передающиеся по HTTP и WebSocket.
  *
- * These mirror the DB rows (see the DDL in support_widget_system_design_plan.md)
- * but in API form:
- *  - camelCase field names (DB uses snake_case);
- *  - timestamps are ISO-8601 strings (JSON has no Date type);
- *  - `null` for absent nullable columns.
+ * Отражают строки БД (см. DDL в support_widget_system_design_plan.md),
+ * но в виде API:
+ *  - camelCase имена полей (БД использует snake_case);
+ *  - временны́е метки — ISO-8601 строки (в JSON нет типа Date);
+ *  - `null` для отсутствующих nullable-колонок.
  */
 
 import type { ConversationStatus, SenderType } from './enums.js';
 
-/** A single chat message. Mirrors a row in `messages`. */
+/** Одно сообщение чата. Отражает строку в таблице `messages`. */
 export interface MessageDto {
   id: string;
   conversationId: string;
   senderType: SenderType;
-  /** Visitor or user id; `null` for `system` messages. */
+  /** Id посетителя или пользователя; `null` для `system`-сообщений. */
   senderId: string | null;
   body: string;
   createdAt: string;
@@ -23,7 +23,7 @@ export interface MessageDto {
   readAt: string | null;
 }
 
-/** A conversation between a visitor and (optionally) an operator. Mirrors `conversations`. */
+/** Диалог между посетителем и (опционально) оператором. Отражает таблицу `conversations`. */
 export interface ConversationDto {
   id: string;
   projectId: string;
@@ -34,7 +34,7 @@ export interface ConversationDto {
   updatedAt: string;
 }
 
-/** A widget end-user. Mirrors `visitors`. */
+/** Конечный пользователь виджета. Отражает таблицу `visitors`. */
 export interface VisitorDto {
   id: string;
   projectId: string;
@@ -43,17 +43,17 @@ export interface VisitorDto {
   createdAt: string;
 }
 
-/** Body for creating a message (the conversation id comes from the route / WS payload). */
+/** Тело запроса для создания сообщения (id диалога берётся из маршрута / WS-payload). */
 export interface CreateMessageInput {
   body: string;
 }
 
 /**
- * Body for `PATCH /operator/conversations/:id` — partial update of a conversation.
+ * Тело запроса для `PATCH /operator/conversations/:id` — частичное обновление диалога.
  *
- * Both fields are optional; the operator sends only what changes:
- *  - `status` moves the conversation through its lifecycle (open/assigned/closed);
- *  - `assignedUserId` claims or releases the conversation (`null` = unassign).
+ * Оба поля опциональны; оператор отправляет только то, что меняет:
+ *  - `status` продвигает диалог по жизненному циклу (open/assigned/closed);
+ *  - `assignedUserId` берёт или освобождает диалог (`null` = снять назначение).
  */
 export interface UpdateConversationInput {
   status?: ConversationStatus;
@@ -61,13 +61,13 @@ export interface UpdateConversationInput {
 }
 
 /**
- * Body for `POST /widget/session`.
+ * Тело запроса для `POST /widget/session`.
  *
- * `publicKey` identifies the project (maps to `projects.public_key`).
- * `visitorId` is optional: the widget persists the id it got last time in
- * localStorage and replays it here so a returning visitor keeps their history.
- * If it is missing or does not belong to the project, the API creates a fresh
- * anonymous visitor.
+ * `publicKey` идентифицирует проект (соответствует `projects.public_key`).
+ * `visitorId` опционален: виджет сохраняет id, полученный в прошлый раз, в
+ * localStorage и передаёт его здесь, чтобы возвращающийся посетитель сохранял
+ * историю. Если он отсутствует или не принадлежит проекту, API создаёт нового
+ * анонимного посетителя.
  */
 export interface CreateSessionInput {
   publicKey: string;
@@ -75,17 +75,17 @@ export interface CreateSessionInput {
 }
 
 /**
- * Response of `POST /widget/session`.
+ * Ответ на `POST /widget/session`.
  *
- * `token` is the raw, opaque session token — returned to the client exactly
- * once. The server stores only its hash (see `widget_sessions.token_hash`), so
- * it can never hand the token back again. The widget keeps `visitorId` to
- * replay on the next session (see CreateSessionInput).
+ * `token` — сырой непрозрачный токен сессии, возвращается клиенту ровно один раз.
+ * Сервер хранит только его хеш (см. `widget_sessions.token_hash`), поэтому больше
+ * никогда не сможет вернуть токен повторно. Виджет сохраняет `visitorId`, чтобы
+ * передать его при следующей сессии (см. CreateSessionInput).
  */
 export interface WidgetSessionDto {
   token: string;
   visitorId: string;
   projectId: string;
-  /** ISO-8601 expiry of the session token. */
+  /** Время истечения токена сессии в формате ISO-8601. */
   expiresAt: string;
 }

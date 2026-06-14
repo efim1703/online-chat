@@ -4,10 +4,10 @@ import { OperatorConversationsController } from './operator-conversations.contro
 import { OperatorConversationsService } from './operator-conversations.service.js';
 import { OperatorGuard } from './operator.guard.js';
 
-// Operator feature module. Shares MessagesService (persist + future broadcast)
-// with the widget side via MessagesModule. DatabaseService and ConfigService
-// come from the @Global DatabaseModule / ConfigModule, so OperatorGuard can
-// inject them when it runs on the conversation routes.
+// Feature-модуль оператора. Делит MessagesService (сохранение + будущая рассылка)
+// с виджетной стороной через MessagesModule. DatabaseService и ConfigService
+// приходят из @Global DatabaseModule / ConfigModule, чтобы OperatorGuard мог
+// инжектировать их при работе на маршрутах диалогов.
 @Module({
   imports: [MessagesModule],
   controllers: [OperatorConversationsController],

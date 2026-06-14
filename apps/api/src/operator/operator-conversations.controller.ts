@@ -14,9 +14,9 @@ import { UpdateConversationDto } from './dto.js';
 import { OperatorCtx, OperatorGuard, type OperatorContext } from './operator.guard.js';
 
 /**
- * Operator-facing conversation routes. OperatorGuard validates the dev token
- * (v0-4.9) and injects the OperatorContext (org-scoped). Bodies are validated by
- * the global ValidationPipe against the DTO classes (v0-4.10).
+ * HTTP-маршруты для операторов. OperatorGuard валидирует dev-токен (v0-4.9)
+ * и инжектирует OperatorContext (с привязкой к организации). Тела запросов
+ * валидируются глобальным ValidationPipe против DTO-классов (v0-4.10).
  */
 @Controller('operator/conversations')
 @UseGuards(OperatorGuard)

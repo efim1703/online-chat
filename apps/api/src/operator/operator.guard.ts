@@ -8,28 +8,28 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { DatabaseService } from '../database/database.service.js';
 
-/** Identity of the authenticated operator and the org they can act within. */
+/** Идентичность аутентифицированного оператора и организации, в рамках которой он действует. */
 export interface OperatorContext {
   userId: string;
   organizationId: string;
 }
 
-// Minimal request shape we touch — avoids depending on @types/express.
+// Минимальная форма запроса, с которой мы работаем — позволяет не зависеть от @types/express.
 interface RequestWithOperator {
   headers: { authorization?: string };
   operator?: OperatorContext;
 }
 
 /**
- * Dev-only auth for operator routes (v0). Real auth is Google OAuth in v1.
+ * Dev-авторизация для маршрутов оператора (v0). Настоящая авторизация — Google OAuth в v1.
  *
- * The dashboard sends `Authorization: Bearer <OPERATOR_DEV_TOKEN>` (the same
- * static token configured in .env). We compare it to the env value and, on a
- * match, load THE seeded operator (single `role='operator'` user) and attach its
- * id + organization to the request. Conversations are then scoped to that org.
+ * Дашборд отправляет `Authorization: Bearer <OPERATOR_DEV_TOKEN>` (статичный токен
+ * из .env). Мы сравниваем его с переменной окружения и при совпадении загружаем
+ * единственного сидированного оператора (user с `role='operator'`), прикрепляя его
+ * id + организацию к запросу. Диалоги затем ограничиваются этой организацией.
  *
- * This is deliberately crude: one shared token, one operator. It exists only so
- * the e2e loop works without a login, and is trivial to rip out when v1 lands.
+ * Намеренно грубо: один общий токен, один оператор. Существует только для того,
+ * чтобы e2e-цикл работал без логина; тривиально удалить при появлении v1.
  */
 @Injectable()
 export class OperatorGuard implements CanActivate {
@@ -43,12 +43,12 @@ export class OperatorGuard implements CanActivate {
 
     const token = extractBearerToken(req.headers.authorization);
     const expected = this.config.getOrThrow<string>('OPERATOR_DEV_TOKEN');
-    // Plain compare is fine for a v0 dev token; it is not a user secret.
+    // Прямое сравнение нормально для dev-токена v0 — это не пользовательский секрет.
     if (!token || token !== expected) {
       throw new UnauthorizedException('invalid operator token');
     }
 
-    // v0 has exactly one operator (from the seed). Pick the oldest deterministically.
+    // В v0 ровно один оператор (из сида). Берём самого старого детерминированно.
     const result = await this.db.query<{ id: string; organization_id: string }>(
       `SELECT id, organization_id
        FROM users
@@ -68,7 +68,7 @@ export class OperatorGuard implements CanActivate {
   }
 }
 
-// Pull the token out of an "Authorization: Bearer <token>" header.
+// Извлекает токен из заголовка «Authorization: Bearer <token>».
 function extractBearerToken(header: string | undefined): string | null {
   if (!header) return null;
   const [scheme, value] = header.split(' ');
@@ -77,13 +77,13 @@ function extractBearerToken(header: string | undefined): string | null {
 }
 
 /**
- * Injects the resolved OperatorContext into a handler param. Always used behind
- * OperatorGuard, which guarantees it is present.
+ * Инжектирует resolved OperatorContext в параметр хендлера. Всегда используется
+ * за OperatorGuard, который гарантирует его наличие.
  */
 export const OperatorCtx = createParamDecorator(
   (_data: unknown, context: ExecutionContext): OperatorContext => {
     const req = context.switchToHttp().getRequest<RequestWithOperator>();
-    // Non-null: routes using this decorator are always behind OperatorGuard.
+    // Non-null: маршруты с этим декоратором всегда защищены OperatorGuard.
     return req.operator!;
   },
 );

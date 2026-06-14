@@ -4,37 +4,37 @@ import type { CreateSessionInput, WidgetSessionDto } from '@support-widget/share
 import { DatabaseService } from '../database/database.service.js';
 import { isUuid } from '../common/uuid.js';
 
-// How long a visitor session token stays valid. 7 days is plenty for the local
-// e2e loop; sessions are cheap to re-issue (the widget just calls /session again).
+// Срок жизни токена сессии посетителя. 7 дней достаточно для локального e2e-цикла;
+// сессии дёшево перевыдать (виджет просто снова вызывает /session).
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Issues anonymous visitor session tokens for the embedded widget.
+ * Выдаёт анонимные токены сессии посетителя для встраиваемого виджета.
  *
- * Flow of POST /widget/session (decided in v0-4.6):
- *   1. validate the body has a publicKey;
- *   2. resolve the project by public_key (unknown key -> 401);
- *   3. find-or-create the visitor:
- *        - if body.visitorId is given AND belongs to this project -> reuse it
- *          (returning visitor keeps history),
- *        - otherwise create a fresh anonymous visitor;
- *   4. generate a random opaque token, store ONLY its SHA-256 hash in
- *      widget_sessions, with an expires_at;
- *   5. return the RAW token once (the server can never reproduce it).
+ * Флоу POST /widget/session (определён в v0-4.6):
+ *   1. проверяем, что в теле есть publicKey;
+ *   2. резолвим проект по public_key (неизвестный ключ → 401);
+ *   3. находим или создаём посетителя:
+ *        - если body.visitorId указан И принадлежит этому проекту → переиспользуем
+ *          (возвращающийся посетитель сохраняет историю),
+ *        - иначе создаём нового анонимного посетителя;
+ *   4. генерируем случайный непрозрачный токен, сохраняем ТОЛЬКО его SHA-256-хеш
+ *      в widget_sessions вместе с expires_at;
+ *   5. возвращаем СЫРОЙ токен единожды (сервер больше не сможет его воспроизвести).
  *
- * Why opaque + hashed (not JWT): the token can be revoked (delete the row) and a
- * DB leak does not expose live sessions — only hashes. SHA-256 (not bcrypt) is
- * right here because the token is already 256 bits of entropy, so we can index
- * token_hash and look sessions up directly (see idx_widget_sessions).
+ * Почему непрозрачный + хешированный (не JWT): токен можно отозвать (удалить строку),
+ * а утечка БД не раскроет активные сессии — только хеши. SHA-256 (не bcrypt) здесь
+ * уместен, потому что токен уже содержит 256 бит энтропии — можно индексировать
+ * token_hash и искать сессии напрямую (см. idx_widget_sessions).
  */
 @Injectable()
 export class WidgetSessionService {
   constructor(private readonly db: DatabaseService) {}
 
   async createSession(input: CreateSessionInput): Promise<WidgetSessionDto> {
-    // publicKey presence/shape is enforced by CreateSessionDto + global pipe (v0-4.10).
-    // Resolve the project by its public key. An unknown key is an auth failure,
-    // not a 404: we don't want to confirm which keys exist.
+    // Наличие и форма publicKey проверяются через CreateSessionDto + глобальный pipe (v0-4.10).
+    // Резолвим проект по public key. Неизвестный ключ — ошибка аутентификации,
+    // а не 404: мы не хотим подтверждать, какие ключи существуют.
     const project = await this.db.query<{ id: string }>(
       'SELECT id FROM projects WHERE public_key = $1',
       [input.publicKey],
@@ -44,11 +44,11 @@ export class WidgetSessionService {
     }
     const projectId = project.rows[0].id;
 
-    // Reuse the returning visitor when possible, otherwise create a fresh one.
+    // Переиспользуем возвращающегося посетителя, если возможно, иначе создаём нового.
     const visitorId = await this.resolveVisitor(projectId, input.visitorId);
 
-    // Issue an opaque token: the raw value goes to the client exactly once,
-    // only its SHA-256 hash is persisted (see class doc for the why).
+    // Выдаём непрозрачный токен: сырое значение уходит клиенту ровно один раз,
+    // персистируется только его SHA-256-хеш (см. doc-комментарий класса для объяснения).
     const token = randomBytes(32).toString('base64url');
     const tokenHash = createHash('sha256').update(token).digest('hex');
     const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
@@ -63,12 +63,12 @@ export class WidgetSessionService {
   }
 
   /**
-   * Returns the visitor id to attach the session to.
+   * Возвращает id посетителя, к которому нужно привязать сессию.
    *
-   * Reuses `requestedId` only when it is a well-formed UUID that belongs to this
-   * project; anything else (malformed, foreign, or missing) falls through to a
-   * brand-new anonymous visitor. The UUID shape is checked in JS first so a junk
-   * value never reaches the `uuid` column (which would raise a Postgres error).
+   * Переиспользует `requestedId` только если это корректный UUID, принадлежащий
+   * этому проекту; всё остальное (некорректный, чужой или отсутствующий) сводится
+   * к созданию нового анонимного посетителя. Форма UUID проверяется в JS первой,
+   * чтобы мусор не попадал в колонку `uuid` (что вызвало бы ошибку Postgres).
    */
   private async resolveVisitor(
     projectId: string,

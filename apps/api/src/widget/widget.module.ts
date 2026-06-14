@@ -6,10 +6,10 @@ import { WidgetSessionGuard } from './widget-session.guard.js';
 import { WidgetConversationsController } from './widget-conversations.controller.js';
 import { WidgetConversationsService } from './widget-conversations.service.js';
 
-// Widget feature module. DatabaseService comes from the @Global DatabaseModule;
-// MessagesService is pulled in via MessagesModule (shared with operator routes
-// in v0-4.8). WidgetSessionGuard is a provider so Nest can inject DatabaseService
-// into it when it runs on the conversation routes.
+// Feature-модуль виджета. DatabaseService приходит из @Global DatabaseModule;
+// MessagesService подключается через MessagesModule (общий с маршрутами оператора,
+// v0-4.8). WidgetSessionGuard является провайдером, чтобы Nest мог инжектировать
+// в него DatabaseService при работе на маршрутах диалогов.
 @Module({
   imports: [MessagesModule],
   controllers: [WidgetController, WidgetConversationsController],

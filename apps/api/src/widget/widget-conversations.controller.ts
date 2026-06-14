@@ -9,9 +9,9 @@ import {
 } from './widget-session.guard.js';
 
 /**
- * Visitor-facing conversation routes. The guard validates the Bearer session
- * token (v0-4.6) and injects the WidgetSession. Bodies are validated by the
- * global ValidationPipe against the DTO classes (v0-4.10).
+ * HTTP-маршруты диалогов для посетителей. Guard валидирует Bearer-токен сессии
+ * (v0-4.6) и инжектирует WidgetSession. Тела запросов валидируются глобальным
+ * ValidationPipe против DTO-классов (v0-4.10).
  */
 @Controller('widget/conversations')
 @UseGuards(WidgetSessionGuard)

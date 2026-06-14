@@ -4,16 +4,16 @@ import {
   type UpdateConversationInput,
 } from '@support-widget/shared';
 
-// Allowed status values, derived from the shared enum so the two never drift.
+// Допустимые значения статуса, берутся из общего enum, чтобы они никогда не расходились.
 const CONVERSATION_STATUSES = Object.values(ConversationStatus);
 
 /**
- * Validated body for `PATCH /operator/conversations/:id`.
+ * Валидированное тело запроса для `PATCH /operator/conversations/:id`.
  *
- * Both fields are optional (partial update). `assignedUserId` may be a UUID
- * (claim) or explicit `null` (unassign). @IsOptional skips validation when the
- * value is null/undefined, so null passes (unassign) while a non-null value must
- * be a UUID.
+ * Оба поля опциональны (частичное обновление). `assignedUserId` может быть UUID
+ * (назначить) или явным `null` (снять назначение). @IsOptional пропускает
+ * валидацию при null/undefined, поэтому null проходит (снять назначение),
+ * а ненулевое значение должно быть UUID.
  */
 export class UpdateConversationDto implements UpdateConversationInput {
   @IsOptional()

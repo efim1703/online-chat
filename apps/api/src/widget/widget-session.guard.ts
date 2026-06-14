@@ -8,26 +8,26 @@ import {
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
 
-/** Identity resolved from a valid widget session token. */
+/** Идентичность, полученная из валидного токена сессии виджета. */
 export interface WidgetSession {
   visitorId: string;
   projectId: string;
 }
 
-// Minimal request shape we touch — avoids depending on @types/express. The guard
-// reads the Authorization header and stashes the resolved session on the request.
+// Минимальная форма запроса, с которой мы работаем — позволяет не зависеть от @types/express.
+// Guard читает заголовок Authorization и сохраняет resolved-сессию на объекте запроса.
 interface RequestWithSession {
   headers: { authorization?: string };
   widgetSession?: WidgetSession;
 }
 
 /**
- * Authenticates widget HTTP calls by the session token issued in v0-4.6.
+ * Аутентифицирует HTTP-запросы виджета по токену сессии, выданному в v0-4.6.
  *
- * The widget sends `Authorization: Bearer <token>`. We hash the token with
- * SHA-256 and look up a non-expired row in widget_sessions (the stored value is
- * the hash, never the raw token). On success we attach { visitorId, projectId }
- * to the request so controllers/services act on behalf of that visitor.
+ * Виджет отправляет `Authorization: Bearer <token>`. Хешируем токен через
+ * SHA-256 и ищем непросроченную строку в widget_sessions (хранится только хеш,
+ * никогда не сырой токен). При успехе прикрепляем { visitorId, projectId }
+ * к запросу, чтобы контроллеры/сервисы действовали от имени этого посетителя.
  */
 @Injectable()
 export class WidgetSessionGuard implements CanActivate {
@@ -60,7 +60,7 @@ export class WidgetSessionGuard implements CanActivate {
   }
 }
 
-// Pull the token out of an "Authorization: Bearer <token>" header.
+// Извлекает токен из заголовка «Authorization: Bearer <token>».
 function extractBearerToken(header: string | undefined): string | null {
   if (!header) return null;
   const [scheme, value] = header.split(' ');
@@ -69,13 +69,13 @@ function extractBearerToken(header: string | undefined): string | null {
 }
 
 /**
- * Injects the resolved WidgetSession into a handler param. Used together with
- * WidgetSessionGuard — the guard guarantees it is present.
+ * Инжектирует resolved WidgetSession в параметр хендлера. Используется совместно
+ * с WidgetSessionGuard — guard гарантирует его наличие.
  */
 export const WidgetSessionCtx = createParamDecorator(
   (_data: unknown, context: ExecutionContext): WidgetSession => {
     const req = context.switchToHttp().getRequest<RequestWithSession>();
-    // Non-null: routes using this decorator are always behind WidgetSessionGuard.
+    // Non-null: маршруты с этим декоратором всегда защищены WidgetSessionGuard.
     return req.widgetSession!;
   },
 );

@@ -1,9 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 
 /**
- * Liveness probe. Cheap to add now; load balancers / orchestrators in v2+ will
- * poll it. Intentionally does NOT touch the DB — it answers "is the process up",
- * not "is every dependency healthy" (a deeper readiness check can come later).
+ * Liveness probe. Дёшево добавить сейчас; балансировщики / оркестраторы в v2+
+ * будут его опрашивать. Намеренно НЕ трогает БД — отвечает на вопрос «процесс жив?»,
+ * а не «все зависимости здоровы?» (более глубокая readiness-проверка может появиться позже).
  */
 @Controller('health')
 export class HealthController {
